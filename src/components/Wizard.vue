@@ -422,6 +422,7 @@ function finish() {
     <!-- ⑥ 属性值（自动计算） -->
     <div v-if="step === 6" class="kt-step-pane">
       <p class="kt-sub" style="margin-bottom:8px">最终值 = 种族基础值 + 种族技能修正 + 分配（剩余 <strong>{{ allocLeft }}</strong> 点）+ 其他；加成 = 最终值 ÷ 3 向下取整（自动计算）。单项 ≤ 13。</p>
+      <div class="kt-scrollx">
       <table class="kt-table kt-abiltab">
         <thead><tr><th>属性</th><th>基础值</th><th>种族技能修正</th><th>分配</th><th>其他</th><th>最终</th><th>加成(÷3)</th></tr></thead>
         <tbody>
@@ -440,6 +441,7 @@ function finish() {
           </tr>
         </tbody>
       </table>
+      </div>
       <div v-if="hasTalent || hasSpecialize" class="kt-limits" style="margin-top:10px">
         <div class="kt-flabel">种族技能自动应用（写入「种族技能修正」列）</div>
         <div v-if="hasTalent" class="kt-rowline">

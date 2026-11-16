@@ -292,12 +292,33 @@ function onKey(e){
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){ e.preventDefault(); searchOpen.value ? searchOpen.value = false : openSearch() }
   if (e.key === 'Escape'){ searchOpen.value = false; drawer.value = null; showPrint.value = false }
 }
+function wrapTablesIn(root){
+  if (!root) return
+  root.querySelectorAll('table').forEach(t => {
+    const p = t.parentElement
+    if (!p) return
+    // 已有滚动容器/专用布局的表格不重复包裹
+    if (p.closest('.kt-tblscroll, .kt-table-wrap, .kt-eqtable-wrap, .kt-scrollx, .sheet')) return
+    const w = document.createElement('div')
+    w.className = 'kt-tblscroll'
+    p.insertBefore(w, t)
+    w.appendChild(t)
+  })
+}
+function wrapAllTables(){
+  wrapTablesIn(document.getElementById('kt-main'))
+}
+if (typeof window !== 'undefined') {
+  watch([view, anchorIdx, renderedCount], () => { nextTick(wrapAllTables) })
+}
+
 onMounted(() => {
   window.addEventListener('keydown', onKey)
   document.addEventListener('kt-close-print', onKtClosePrint)
   const m = document.querySelector('.kt-main')
   if (m) m.addEventListener('scroll', onMainScroll, { passive: true })
   if (location.hash === WIZARD_HASH) { view.value = 'charcreate'; activeNav.value = '角色创建助手' }
+  nextTick(wrapAllTables)
 })
 onBeforeUnmount(() => { window.removeEventListener('keydown', onKey); document.removeEventListener('kt-close-print', onKtClosePrint) })
 
@@ -337,7 +358,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
           </div>
         </nav>
 
-        <main class="kt-main">
+        <main class="kt-main" id="kt-main">
 
           <!-- 技能库 -->
           <section v-show="view === 'skills'">
