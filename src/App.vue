@@ -234,6 +234,9 @@ const modsList = Object.entries(modFiles)
   .map(([, m]) => (m && m.default) ? m.default : m)
   .filter(m => m && m.id && !m.template)
   .sort((a, b) => (b.official ? 1 : 0) - (a.official ? 1 : 0))
+const modSeries = ref('all')
+const modSeriesList = computed(() => [...new Set(modsList.map(m => (m.meta && m.meta.series) || '其他'))])
+const visibleMods = computed(() => modSeries.value === 'all' ? modsList : modsList.filter(m => ((m.meta && m.meta.series) || '其他') === modSeries.value))
 const curModId = ref(modsList[0] ? modsList[0].id : '')
 const curMod = computed(() => modsList.find(m => m.id === curModId.value) || modsList[0] || null)
 function jp(x, d){ try { const v = JSON.parse(x); return v || d } catch (e) { return d } }
@@ -249,7 +252,7 @@ function encName(b){ if (b.enemyRef) return b.enemyRef; const m = curMod.value &
 function encMeta(b){
   if (b.enemyRef) { const e = findEnemy(b.enemyRef); return e ? 'Lv' + e.level + ' · HP ' + e.hp + (e.mp != null ? ' · MP ' + e.mp : '') + ' · 防 ' + e.defense + ' · ' + e.check : '' }
   const m = curMod.value && curMod.value.monsters[b.monster]
-  return m ? 'Lv' + m.level + ' · HP ' + m.hp + ' · MP ' + m.mp + ' · 防 ' + m.defense + ' · ' + m.attack : ''
+  return m ? 'Lv' + m.level + ' · HP ' + m.hp + (m.mp != null ? ' · MP ' + m.mp : '') + ' · 防 ' + m.defense + ' · ' + m.attack : ''
 }
 const encExpanded = reactive({})
 function toggleEnc(k, b){
@@ -566,10 +569,15 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
 
 <!-- 模组 -->
           <section v-show="view === 'mods'">
+            <div class="kt-mod-series">
+              <button class="kt-chip" :class="{ 'is-on': modSeries === 'all' }" @click="modSeries = 'all'">全部（{{ modsList.length }}）</button>
+              <button v-for="sr in modSeriesList" :key="sr" class="kt-chip" :class="{ 'is-on': modSeries === sr }" @click="modSeries = sr">{{ sr }}</button>
+            </div>
             <div class="kt-mod-cards">
-              <button v-for="m in modsList" :key="m.id" class="kt-modcard" :class="{ 'is-on': curMod && curMod.id === m.id }" @click="curModId = m.id">
+              <button v-for="m in visibleMods" :key="m.id" class="kt-modcard" :class="{ 'is-on': curMod && curMod.id === m.id }" @click="curModId = m.id">
                 <strong>{{ m.title }}</strong>
-                <span class="kt-badge" :class="m.official ? 'kt-badge-green' : 'kt-badge-blue'">{{ m.official ? '官方模组' : '自制模组' }}</span>
+                <span class="kt-badge" :class="m.official ? 'kt-badge-green' : 'kt-badge-blue'">{{ m.official ? '官方模组' : '社区模组' }}</span>
+                <span v-if="m.meta.series" class="kt-chip">{{ m.meta.series }}</span>
                 <span>{{ m.meta.players }} · {{ m.meta.duration }}</span>
               </button>
               <button class="kt-modcard" @click="view = 'modtemplate'"><strong>＋ 新建模组</strong><span>复制 _template 目录即可</span></button>
@@ -606,6 +614,14 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                       <thead><tr><th v-for="h in b.head" :key="h">{{ h }}</th></tr></thead>
                       <tbody><tr v-for="(r, ri) in b.rows" :key="ri"><td v-for="(c, ci) in r" :key="ci">{{ c }}</td></tr></tbody>
                     </table>
+                    <div v-else-if="b.type === 'rule'" class="kt-ruleblock">
+                      <div class="kt-ruleblock-title">📖 {{ b.title }}</div>
+                      <div class="kt-ruleblock-text">{{ b.text }}</div>
+                      <table v-if="b.table" class="kt-table kt-xptable">
+                        <thead><tr><th v-for="h in b.table.head" :key="h">{{ h }}</th></tr></thead>
+                        <tbody><tr v-for="(r, ri) in b.table.rows" :key="ri"><td v-for="(c, ci) in r" :key="ci">{{ c }}</td></tr></tbody>
+                      </table>
+                    </div>
                     <div v-else-if="b.type === 'encounter'" class="kt-encounter" @click="toggleEnc(curMod.id + '-' + i + '-' + bi, b)">
                       <strong>{{ encName(b) }} × {{ b.count }}</strong>
                       <span v-if="encMeta(b)">{{ encMeta(b) }}</span>

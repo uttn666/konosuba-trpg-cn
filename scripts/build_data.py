@@ -117,9 +117,36 @@ def apply_fix(obj, fixes, name):
             APPLY_FIX_LOG.append({'name': name, 'fix': note})
 
 # ---------- 1. rulebook.json (阅读视图原始内容, 图片路径指向 public/img) ----------
+TRAP_EFFECTS = {
+    '水池':   '目标陷入游泳状态，需通过力量判定DL10，失败则失去剩余移动。不影响飞行状态角色。(p294)',
+    '锁A':    '目标变为「不可开」。仅拆除此陷阱才能打开（HP 20、物防/魔防 10）。(p294)',
+    '落穴':   '敏捷判定DL13，失败者坠入洞中受到2d6贯穿伤害。(p294)',
+    '尖刺板': '敏捷判定DL14，失败者受到3d6+10物理伤害。(p295)',
+    '锁B':    '需特定钥匙或满足特定条件才能解除，无法直接撬开。(p295)',
+    '酸液湖': '受到5点HP损失，且每次清理流程再受5点HP损失。(p295)',
+    '爆裂陷阱': '范围内所有目标进行幸运判定DL13，失败者受到2d6+10物理伤害。(p295)',
+}
+
+def _fix_rulebook_html(i, html):
+    # [101] 陷阱表效果列：按行替换为回填后的正确效果
+    if i == 101:
+        for k, eff in TRAP_EFFECTS.items():
+            m = re.search(r'<tr>(?:(?!</tr>).)*?' + re.escape(k) + r'(?:(?!</tr>).)*?</tr>', html, re.S)
+            if not m: continue
+            row = m.group(0)
+            tds = list(re.finditer(r'<td[^>]*>.*?</td>', row, re.S))
+            if not tds: continue
+            last = tds[-1]
+            html = html.replace(row, row[:last.start()] + '<td>' + eff + '</td>' + row[last.end():], 1)
+    # 状态名：滑倒(Slip) → 失衡(Off-Balance)
+    html = html.replace('滑倒（Slip）', '失衡（Off-Balance）')
+    html = html.replace('从滑倒恢复', '从失衡恢复')
+    html = html.replace('滑倒', '失衡')
+    return html
+
 rulebook = [{'i': s['i'], 'ch': s['chapter'], 'chTitle': s['chapterTitle'],
              'title': s['title'], 'id': s['id'],
-             'html': s['content'].replace('images/', 'img/')} for s in SECTIONS]
+             'html': _fix_rulebook_html(s['i'], s['content'].replace('images/', 'img/'))} for s in SECTIONS]
 
 # ---------- 2. 生命轨迹表 [32] ----------
 lifepath = []
@@ -490,15 +517,6 @@ for _cat, _fx in ITEM_CELL_FIXES.items():
                 APPLY_FIX_LOG.append({'name': _r['name'], 'fix': 'cells 字段修正'})
 
 # ---------- 7. 陷阱 [101]（数值列来自旧表, 效果列整列修正） ----------
-TRAP_EFFECTS = {
-    '水池':   '目标陷入游泳状态，需通过力量判定DL10，失败则失去剩余移动。不影响飞行状态角色。(p294)',
-    '锁A':    '目标变为「不可开」。仅拆除此陷阱才能打开（HP 20、物防/魔防 10）。(p294)',
-    '落穴':   '敏捷判定DL13，失败者坠入洞中受到2d6贯穿伤害。(p294)',
-    '尖刺板': '敏捷判定DL14，失败者受到3d6+10物理伤害。(p295)',
-    '锁B':    '需特定钥匙或满足特定条件才能解除，无法直接撬开。(p295)',
-    '酸液湖': '受到5点HP损失，且每次清理流程再受5点HP损失。(p295)',
-    '爆裂陷阱': '范围内所有目标进行幸运判定DL13，失败者受到2d6+10物理伤害。(p295)',
-}
 traps = []
 for heading, rows in tables_of(101):
     if not rows or not rows[0]: continue

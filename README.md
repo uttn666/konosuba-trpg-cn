@@ -19,15 +19,26 @@
   - 种族/职业/生命轨迹（d66 掷骰）/技能卡片（含 AR2E）/属性自动计算/装备选择（带数值与价格）/导出
   - 实时数值条、技能上限拦截、资金与负重校验、规则检查清单
 - 🖨 **A4 横版角色卡导出**：两页版式（复刻社区改良版中文角色卡），打印或另存 PDF
-- 📜 **模组系统**：内置官方模组「给这些竹笋的美味！」；放入 `src/data/mods/<slug>/module.json` 重新构建即可收录新模组
+- 📜 **模组系统**：内置 15 篇中文模组（官方示例「给这些竹笋的美味！」+ 长线《阿克塞尔之谜》《雪落村》+ 8 篇新手任务），按系列筛选；阶段折叠、遭遇卡可展开怪物数据，陷阱/规则处直接内嵌规则书速查；放入 `src/data/mods/<slug>/module.json` 重新构建即可收录新模组
 - 🌓 亮/暗主题 · 🖥 单文件离线运行 · 数据本地保存
 - 📱 手机/平板适配（抽屉式导航与目录、触屏优化）· 🖥 Windows 桌面程序（Electron）· 📲 安卓（Capacitor / PWA）· 阅读目录右侧常驻
+
+### 内置模组一览
+
+| 系列 | 模组 |
+|---|---|
+| 阿克塞尔之谜 | 阿克塞尔之谜 I / II · 红魔之里最终决战 |
+| 雪落村 | 前往雪落村之路 · 怪物城堡 · 遗迹探索 · 村庄遇袭（终章） |
+| 新手任务 | 墓地狂欢 · 为不死者的服务 · 怪物马戏团 · 卷心菜狩猎 · 蟾蜍狩猎 · 哥布林讨伐 · 花之力 · 梦魔咖啡厅的求助 |
+| 官方示例 | 给这些竹笋的美味！ |
+
+模组 JSON 的 `meta.series` 决定系列分组；`blocks` 支持 `text` / `table` / `check` / `rule`（规则速查）/ `encounter`（可展开怪物数据）。新增模组参考 `src/data/mods/_template/module.json`。
 
 ## 使用
 
 ### 桌面程序（Windows）
 
-➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.1.0-pc)**
+➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.0-pc)**
 
 | 文件 | 用法 |
 |---|---|
@@ -39,7 +50,7 @@
 
 ### 安卓（手机 / 平板）
 
-➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.1.0-android)**
+➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.0-android)**
 
 - **方式一（推荐）**：下载 `KonosubaTRPG-CN-*-android.apk` 安装（需允许安装未知来源应用；当前为调试签名版）
 - **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或把 `docs/pages-workflow.example.yml` 复制到 `.github/workflows/pages.yml` 即可启用 GitHub Pages 自动部署（需 workflow 权限）），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用

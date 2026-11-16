@@ -499,3 +499,9 @@ button#kt-app .kt-chip{cursor:pointer;}
 #kt-app .kt-tblscroll{overflow-x:auto; -webkit-overflow-scrolling:touch; max-width:100%; margin:8px 0;}
 #kt-app .kt-tblscroll > table{width:max-content; min-width:100%; margin:0;}
 #kt-app .kt-main{overflow-x:hidden;}
+
+/* ===== 模组：系列筛选 + 规则速查块 ===== */
+#kt-app .kt-mod-series{display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;}
+#kt-app .kt-ruleblock{margin:10px 0; padding:10px 13px; border-radius:9px; border:1px solid var(--kt-border); border-left:4px solid var(--kt-accent2); background:var(--kt-card2);}
+#kt-app .kt-ruleblock-title{font-weight:600; color:var(--kt-heading); font-size:13px; margin-bottom:4px;}
+#kt-app .kt-ruleblock-text{font-size:12.5px; line-height:1.7; white-space:pre-line;}
