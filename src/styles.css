@@ -417,8 +417,8 @@ button#kt-app .kt-chip{cursor:pointer;}
 /* ===== 平板 / 手机适配（≤900px） ===== */
 @media (max-width:900px){
   #kt-app .kt-menu-btn{display:flex;}
-  #kt-app .kt-sidebar{display:flex; position:fixed; left:0; top:0; bottom:0; z-index:60; width:264px;
-    transform:translateX(-104%); transition:transform .22s ease; box-shadow:0 0 30px rgba(0,0,0,.25);}
+  #kt-app .kt-sidebar{display:block; position:fixed; left:0; top:0; bottom:0; z-index:60; width:264px;
+    transform:translateX(-104%); transition:transform .22s ease; box-shadow:0 0 30px rgba(0,0,0,.25); overflow-y:auto;}
   #kt-app .kt-sidebar.open{transform:none;}
   #kt-app .kt-nav-backdrop{position:fixed; inset:0; background:rgba(7,54,66,.45); z-index:59;}
   #kt-app .kt-reader-layout{display:block;}
