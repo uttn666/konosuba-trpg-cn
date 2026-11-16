@@ -1,0 +1,18 @@
+{
+  "name": "素晴TRPG · 非官方中文规则书",
+  "short_name": "素晴TRPG",
+  "description": "《为美好的世界献上祝福！TRPG》非官方中文规则书与车卡工具（学习交流用，非营利）",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fdf6e3",
+  "theme_color": "#268bd2",
+  "icons": [
+    { "src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "./icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

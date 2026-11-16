@@ -15,3 +15,17 @@ Thumbs.db
 .vscode/
 *.log
 dist/img/
+
+# Electron 构建产物
+release/
+
+# Android / Capacitor 构建产物
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/capacitor-cordova-android-plugins/build/
+
+# 构建产物（不提交，走 Releases）
+*.apk
+*.exe

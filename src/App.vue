@@ -25,6 +25,7 @@ watch(ch, () => { try { localStorage.setItem('kt-character', JSON.stringify(ch))
 const stats = makeStats(ch, classes, items)
 const showPrint = ref(false)
 const showAbout = ref(false)
+const navOpen = ref(false)
 function onKtClosePrint(){ showPrint.value = false }
 function toggleTheme(){ theme.value = theme.value === 'dark' ? 'light' : 'dark'; localStorage.setItem('kt-theme', theme.value) }
 function setMode(m){ mode.value = m; localStorage.setItem('kt-mode', m) }
@@ -53,14 +54,17 @@ const NAV = [
 const activeNav = ref('skills')
 const WIZARD_HASH = '#wizard'
 function go(v, preset, label){
-  // 角色创建助手：单开新标签页（hash 路由，file:// 双击场景同样可用）
-  if (v === 'charcreate') {
+  const isSmall = window.matchMedia('(max-width: 900px)').matches
+  // 角色创建助手：桌面单开新标签页；手机/平板在应用内打开
+  if (v === 'charcreate' && !isSmall) {
     const url = location.pathname + location.search + WIZARD_HASH
     const w = window.open(url, '_blank')
     if (!w) { view.value = 'charcreate'; activeNav.value = label } // 弹窗被拦截时回退为当前页打开
     searchOpen.value = false
+    navOpen.value = false
     return
   }
+  navOpen.value = false
   // 离开创建视图时清掉 hash
   if (location.hash) { try { history.replaceState(null, '', location.pathname + location.search) } catch (e) {} }
   view.value = v
@@ -306,6 +310,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
     <div class="kt-window">
       <header class="kt-topbar">
         <div class="kt-brand">
+          <button class="kt-menu-btn" @click="navOpen = !navOpen" aria-label="菜单">☰</button>
           <span class="kt-logo">✨</span>
           <div class="kt-brand-txt"><strong>为美好的世界献上祝福！TRPG</strong><span>规则书 · {{ manifest.dataVersion }} 数据 · <b class="kt-unofficial">非官方中文版 · 学习交流用</b></span></div>
         </div>
@@ -319,8 +324,9 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
         </div>
       </header>
 
+      <div v-if="navOpen" class="kt-nav-backdrop" @click="navOpen = false"></div>
       <div class="kt-body">
-        <nav class="kt-sidebar" aria-label="导航">
+        <nav class="kt-sidebar" :class="{ open: navOpen }" aria-label="导航">
           <div v-for="grp in NAV" :key="grp.head" class="kt-navgroup">
             <div class="kt-navhead">{{ grp.head }}</div>
             <button v-for="it in grp.items" :key="it.label" class="kt-navitem"
@@ -492,39 +498,43 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
             <div class="kt-article" v-html="cheats.html"></div>
           </section>
 
-<!-- 阅读视图：整章连续滚动 + 抽屉目录 -->
+<!-- 阅读视图：整章连续滚动 + 右侧常驻目录 -->
           <section v-show="view === 'reader'">
             <div class="kt-view-head">
               <div><h2>{{ headChapter.ch + ' · ' + headChapter.chTitle }}</h2><p class="kt-sub">连续阅读 · 已载入 {{ renderedSections.length }} 节 · 滚动到底自动载入下一章 · 当前：<strong>{{ curSecTitle || '—' }}</strong></p></div>
               <div class="kt-view-tools">
-                <button class="kt-btn" @click="tocOpen = true">☰ 目录</button>
+                <button class="kt-btn kt-toc-toggle" @click="tocOpen = true">☰ 目录</button>
                 <button class="kt-pager" @click="gotoChapter(-1)" :disabled="anchorIdx <= 0">← 上一章</button>
                 <button class="kt-pager" @click="gotoChapter(1)" :disabled="anchorIdx + renderedCount >= chapters.length">下一章 →</button>
               </div>
             </div>
-            <article class="kt-article kt-chapter">
-              <template v-for="(c, ci) in renderedChapters" :key="c.ch + c.chTitle">
-                <h2 v-if="ci > 0 || anchorIdx > 0" class="kt-chapdiv">{{ c.ch }} · {{ c.chTitle }}</h2>
-                <div v-for="sec in c.sections" :key="sec.i" class="kt-sec" :id="'kt-sec-' + sec.i">
-                  <h3 class="kt-sec-h">{{ sec.title }}</h3>
-                  <div v-html="sec.html"></div>
-                </div>
-              </template>
-            </article>
+            <div class="kt-reader-layout">
+              <article class="kt-article kt-chapter">
+                <template v-for="(c, ci) in renderedChapters" :key="c.ch + c.chTitle">
+                  <h2 v-if="ci > 0 || anchorIdx > 0" class="kt-chapdiv">{{ c.ch }} · {{ c.chTitle }}</h2>
+                  <div v-for="sec in c.sections" :key="sec.i" class="kt-sec" :id="'kt-sec-' + sec.i">
+                    <h3 class="kt-sec-h">{{ sec.title }}</h3>
+                    <div v-html="sec.html"></div>
+                  </div>
+                </template>
+              </article>
 
-            <div v-if="tocOpen" class="kt-tocdrawer-backdrop" @click.self="tocOpen = false">
-              <aside class="kt-tocdrawer" role="dialog" aria-label="目录">
-                <div class="kt-tocdrawer-head">目录<button class="kt-btn" @click="tocOpen = false">✕</button></div>
-                <div class="kt-tocdrawer-body">
+              <aside class="kt-reader-aside" :class="{ open: tocOpen }" role="complementary" aria-label="章节目录">
+                <div class="kt-aside-head">
+                  <span>目录</span>
+                  <button class="kt-btn kt-aside-close" @click="tocOpen = false">✕</button>
+                </div>
+                <div class="kt-aside-body">
                   <template v-for="c in chapters" :key="c.ch + c.chTitle">
                     <a class="kt-toc-ch" :class="{ 'is-cur': sameCh(headChapter, c) }" @click="pickCur(c)">{{ c.ch }} · {{ c.chTitle }}<span class="kt-toc-n">{{ c.sections.length }}节</span></a>
                     <template v-if="sameCh(headChapter, c)">
-                      <a v-for="sec in c.sections" :key="sec.i" class="kt-toc-sec" @click="jumpSection(c, sec)">{{ sec.title }}</a>
+                      <a v-for="sec in c.sections" :key="sec.i" class="kt-toc-sec" :class="{ 'is-cur': curSec && curSec.i === sec.i }" @click="jumpSection(c, sec)">{{ sec.title }}</a>
                     </template>
                   </template>
                 </div>
               </aside>
             </div>
+            <div v-if="tocOpen" class="kt-toc-backdrop" @click.self="tocOpen = false"></div>
           </section>
 
           <!-- 角色创建助手 -->

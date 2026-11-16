@@ -21,10 +21,31 @@
 - 🖨 **A4 横版角色卡导出**：两页版式（复刻社区改良版中文角色卡），打印或另存 PDF
 - 📜 **模组系统**：内置官方模组「给这些竹笋的美味！」；放入 `src/data/mods/<slug>/module.json` 重新构建即可收录新模组
 - 🌓 亮/暗主题 · 🖥 单文件离线运行 · 数据本地保存
+- 📱 手机/平板适配（抽屉式导航与目录、触屏优化）· 🖥 Windows 桌面程序（Electron）· 📲 安卓（Capacitor / PWA）· 阅读目录右侧常驻
 
 ## 使用
 
-### 直接使用（推荐）
+### 桌面程序（Windows）
+
+- 下载 Releases 中的 `KonosubaTRPG-CN-*-portable.exe`，双击即用（免安装，离线可用）
+- 或自行构建：`npm install && npm run build:win`（产物在 `release/`；也可 `npm run desktop` 直接运行开发版）
+- 说明：便携版由 Electron 打包；未做代码签名与 exe 资源编辑（需 Windows 开发者模式权限），exe 图标为默认图标，不影响使用
+
+### 安卓（手机 / 平板）
+
+- **方式一（推荐）**：下载 Releases 中的 APK 安装（需允许安装未知来源应用）
+- **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或把 `docs/pages-workflow.example.yml` 复制到 `.github/workflows/pages.yml` 即可启用 GitHub Pages 自动部署（需 workflow 权限）），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用
+- **方式三（自行构建）**：安装 Android Studio（含 SDK），然后：
+  ```bash
+  npm install
+  npm run build                 # 生成 dist
+  npx cap copy android          # 同步 Web 资源
+  # 用 Android Studio 打开 android/ 目录直接运行/打包
+  # 或命令行：cd android && ./gradlew assembleDebug
+  ```
+  产物：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+### 浏览器 / 直接使用
 
 下载 `dist/index.html`，双击打开即可（Chrome / Edge 等现代浏览器，离线可用）。
 

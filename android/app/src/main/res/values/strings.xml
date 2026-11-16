@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">素晴TRPG</string>
+    <string name="title_activity_main">素晴TRPG</string>
+    <string name="package_name">cn.konosuba.trpg</string>
+    <string name="custom_url_scheme">cn.konosuba.trpg</string>
+</resources>
