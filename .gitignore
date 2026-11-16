@@ -1,0 +1,17 @@
+# dependencies
+node_modules/
+
+# build cache
+.vite/
+*.local
+
+# 官方书内插图（版权内容，不随仓库分发）
+public/img/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.log
+dist/img/

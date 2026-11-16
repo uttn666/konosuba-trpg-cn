@@ -1,0 +1,42 @@
+{
+  "id": "_template",
+  "title": "（新建模组模板）",
+  "official": false,
+  "template": true,
+  "meta": {
+    "level": "推荐等级",
+    "players": "人数",
+    "duration": "时长",
+    "source": "原创 / 改编"
+  },
+  "pregen": "（可选）预读文本与预生成角色说明。",
+  "monsters": {
+    "example": {
+      "name": "示例敌人",
+      "nameEn": "Example Enemy",
+      "type": "类型 / 属性",
+      "level": 1,
+      "hp": 10,
+      "mp": 10,
+      "defense": "0/0",
+      "check": "回避 2D+0",
+      "actMove": "行动 0 / 移动 0",
+      "attack": "攻击名: 2D+0 / 2D+0 / 物理 / 近",
+      "abils": "筋力0/0 · 器用0/0 · 敏捷0/0 · 知力0/0 · 感知0/0 · 精神0/0 · 幸运0/0",
+      "skills": ["技能名 Lv1：效果描述。"],
+      "loot": "掉落说明"
+    }
+  },
+  "stages": [
+    {
+      "title": "开场阶段：……",
+      "tag": "无战斗",
+      "blocks": [
+        { "type": "text", "text": "正文段落。type 可用：text / table / check / encounter。" },
+        { "type": "table", "head": ["项目", "内容"], "rows": [["示例", "值"]] },
+        { "type": "check", "text": "感知判定 DL12——成功则……失败则……" },
+        { "type": "encounter", "monster": "example", "count": "1", "note": "monster 键对应本文件 monsters 表；也可用 enemyRef 直接引用怪物库中的敌人名。" }
+      ]
+    }
+  ]
+}
