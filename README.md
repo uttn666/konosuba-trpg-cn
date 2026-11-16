@@ -61,7 +61,7 @@ npm run data     # 重新生成 src/data（需要 Python，读取 scripts/source
 
 ## 许可
 
-- **代码**（构建脚本、界面代码、数据管道）：[MIT](./LICENSE)
+- **代码**（构建脚本、界面代码、数据管道）：[MIT](./LICENSE)。MIT 仅覆盖代码，不覆盖翻译文本与规则数据
 - **翻译文本与规则数据**：见 [NOTICE.md](./NOTICE.md)，仅供学习交流，不随代码许可授权
 
 ## 致谢
