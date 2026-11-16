@@ -45,10 +45,17 @@
           "arch": [
             "x64"
           ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
-      "signAndEditExecutable": false
+      "signAndEditExecutable": false,
+      "artifactName": "${productName}-${version}-win-x64.${ext}"
     },
     "portable": {
       "artifactName": "KonosubaTRPG-CN-${version}-portable.exe"

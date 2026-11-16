@@ -27,13 +27,21 @@
 
 ### 桌面程序（Windows）
 
-- 下载 Releases 中的 `KonosubaTRPG-CN-*-portable.exe`，双击即用（免安装，离线可用）
+➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.1.0-pc)**
+
+| 文件 | 用法 |
+|---|---|
+| `KonosubaTRPG-CN-*-win-x64-portable.exe` | **点开即用**：单文件，双击运行，免安装 |
+| `KonosubaTRPG-CN-*-win-x64.zip` | **解压即用**：解压后运行 `KonosubaTRPG-CN.exe` |
+
 - 或自行构建：`npm install && npm run build:win`（产物在 `release/`；也可 `npm run desktop` 直接运行开发版）
-- 说明：便携版由 Electron 打包；未做代码签名与 exe 资源编辑（需 Windows 开发者模式权限），exe 图标为默认图标，不影响使用
+- 说明：未做代码签名与 exe 资源编辑（需 Windows 开发者模式权限），exe 图标为默认图标，不影响使用
 
 ### 安卓（手机 / 平板）
 
-- **方式一（推荐）**：下载 Releases 中的 APK 安装（需允许安装未知来源应用）
+➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.1.0-android)**
+
+- **方式一（推荐）**：下载 `KonosubaTRPG-CN-*-android.apk` 安装（需允许安装未知来源应用；当前为调试签名版）
 - **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或把 `docs/pages-workflow.example.yml` 复制到 `.github/workflows/pages.yml` 即可启用 GitHub Pages 自动部署（需 workflow 权限）），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用
 - **方式三（自行构建）**：安装 Android Studio（含 SDK），然后：
   ```bash
