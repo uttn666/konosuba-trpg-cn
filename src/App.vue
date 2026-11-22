@@ -11,6 +11,7 @@ import classes from './data/classes.json'
 import manifest from './data/manifest.json'
 import Wizard from './components/Wizard.vue'
 import SheetA4 from './components/SheetA4.vue'
+import ModText from './components/ModText.vue'
 import { newCharacter, makeStats } from './character.js'
 
 /* ---------- 全局状态 ---------- */
@@ -598,7 +599,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                 </div>
                 <div class="kt-view-tools"><span class="kt-count">已完成 {{ stageDoneCount(curMod) }} / {{ curMod.stages.length }} 阶段</span></div>
               </div>
-              <div v-if="curMod.pregen" class="kt-note kt-note-info"><strong>预读：</strong>{{ curMod.pregen }}</div>
+              <div v-if="curMod.pregen" class="kt-note kt-note-info kt-pregen"><strong>预读</strong><ModText :text="curMod.pregen" /></div>
 
               <div v-for="(st, i) in curMod.stages" :key="curMod.id + '-' + i" class="kt-stage">
                 <button class="kt-stage-head" @click="toggleStageOpen(curMod.id, i)">
@@ -608,8 +609,8 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                 </button>
                 <div v-show="stageIsOpen(curMod.id, i)" class="kt-stage-body">
                   <template v-for="(b, bi) in st.blocks" :key="bi">
-                    <p v-if="b.type === 'text'">{{ b.text }}</p>
-                    <div v-else-if="b.type === 'check'" class="kt-enc-check">{{ b.text }}</div>
+                    <ModText v-if="b.type === 'text'" :text="b.text" />
+                    <div v-else-if="b.type === 'check'" class="kt-enc-check"><ModText :text="b.text" /></div>
                     <table v-else-if="b.type === 'table'" class="kt-table kt-xptable">
                       <thead><tr><th v-for="h in b.head" :key="h">{{ h }}</th></tr></thead>
                       <tbody><tr v-for="(r, ri) in b.rows" :key="ri"><td v-for="(c, ci) in r" :key="ci">{{ c }}</td></tr></tbody>
@@ -625,7 +626,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                     <div v-else-if="b.type === 'encounter'" class="kt-encounter" @click="toggleEnc(curMod.id + '-' + i + '-' + bi, b)">
                       <strong>{{ encName(b) }} × {{ b.count }}</strong>
                       <span v-if="encMeta(b)">{{ encMeta(b) }}</span>
-                      <span v-if="b.note" style="opacity:.8">{{ b.note }}</span>
+                      <span v-if="b.note" class="kt-enc-note">{{ b.note }}</span>
                       <em>{{ b.enemyRef ? '在怪物库中查看 →' : '展开数据 ▾' }}</em>
                       <div v-if="encExpanded[curMod.id + '-' + i + '-' + bi] && b.monster" class="kt-enc-detail" @click.stop>
                         <div v-for="(skm, si) in curMod.monsters[b.monster].skills" :key="si">· {{ skm }}</div>
