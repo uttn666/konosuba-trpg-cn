@@ -39,7 +39,7 @@
 
 ### 桌面程序（Windows）
 
-➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.0-pc)**
+➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.1-pc)**
 
 | 文件 | 用法 |
 |---|---|
@@ -51,10 +51,10 @@
 
 ### 安卓（手机 / 平板）
 
-➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.0-android)**
+➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.1-android)**
 
 - **方式一（推荐）**：下载 `KonosubaTRPG-CN-*-android.apk` 安装（需允许安装未知来源应用；当前为调试签名版）
-- **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或把 `docs/pages-workflow.example.yml` 复制到 `.github/workflows/pages.yml` 即可启用 GitHub Pages 自动部署（需 workflow 权限）），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用
+- **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或使用仓库已启用的 GitHub Pages 地址），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用
 - **方式三（自行构建）**：安装 Android Studio（含 SDK），然后：
   ```bash
   npm install
@@ -64,6 +64,18 @@
   # 或命令行：cd android && ./gradlew assembleDebug
   ```
   产物：`android/app/build/outputs/apk/debug/app-debug.apk`
+
+### iPhone / iPad（iOS）
+
+无需 App Store、无需 Mac，使用 Safari 的「添加到主屏幕」即可安装为 PWA：
+
+1. 用 **Safari** 打开：**https://uttn666.github.io/konosuba-trpg-cn/app/**
+2. 点底部分享按钮 → **「添加到主屏幕」** → 添加
+3. 从主屏幕启动，全屏显示，之后可离线使用
+
+- 首次打开需联网加载；加载完成后由 Service Worker 缓存，断网也能继续用
+- 角色卡与模组进度保存在 Safari 本地存储中；清除网站数据会一并清除
+- 说明：原生 iOS App（IPA）需要 macOS + Xcode + Apple 签名，本项目无法在当前 Windows 环境构建；PWA 是免签名的等效使用方式
 
 ### 浏览器 / 直接使用
 

@@ -2,6 +2,29 @@
 
 本项目按「PC 端 / 移动端」分别发布，两个发行包的**程序内容相同**，仅打包形式不同。完整版本说明以本文件为准，GitHub Release 页面同步摘要。
 
+## v0.2.1 — 2026-11-22
+
+**主题：iOS / iPadOS 支持（PWA）**
+
+### 新增
+
+- 启用 **GitHub Pages** 在线版：<https://uttn666.github.io/konosuba-trpg-cn/app/>
+- iPhone / iPad 用 Safari 打开后「分享 → 添加到主屏幕」，即可像 App 一样全屏使用，支持离线
+- 新增 `docs/app/` 静态部署目录（由最新 `dist/` 同步，不含任何官方插图）
+- 新增 `v0.2.1-ios` 发行说明，集中说明 iOS 安装方式
+
+### iOS 适配
+
+- `apple-mobile-web-app-status-bar-style` 改为 `default`，避免状态栏与顶栏重叠
+- 新增 `apple-mobile-web-app-title`、`format-detection`
+- 顶栏、底栏、移动端侧栏与右侧目录增加 `env(safe-area-inset-*)` 安全区适配（刘海屏 / 灵动岛 / 底部 Home 指示条）
+- Service Worker 缓存版本升至 `v2`，确保 iOS 更新后取到新构建
+
+### 说明
+
+- iOS 原生 App（IPA）需要 macOS + Xcode + Apple 签名，本项目无法在 Windows 环境构建；PWA 是免签名、免上架的等效使用方式
+- Android 与 PC 安装包同步更新到 0.2.1（内容与 0.2.0 相同，仅含 iOS 适配所需的样式/元信息调整）
+
 ## v0.2.0 — 2026-11-16
 
 **主题：模组大更新（15 篇社区模组 + 规则速查内嵌）**
