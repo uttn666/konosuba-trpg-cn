@@ -67,6 +67,8 @@
 
 ### iPhone / iPad（iOS）
 
+➡️ **[v0.2.1 · iPhone/iPad 发行说明（PWA）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.1-ios)**
+
 无需 App Store、无需 Mac，使用 Safari 的「添加到主屏幕」即可安装为 PWA：
 
 1. 用 **Safari** 打开：**https://uttn666.github.io/konosuba-trpg-cn/app/**
