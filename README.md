@@ -39,7 +39,7 @@
 
 ### 桌面程序（Windows）
 
-➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.3-pc)**
+➡️ **[下载 PC 端发行包](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.4-pc)**
 
 | 文件 | 用法 |
 |---|---|
@@ -51,7 +51,7 @@
 
 ### 安卓（手机 / 平板）
 
-➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.3-android)**
+➡️ **[下载移动端发行包（APK）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.4-android)**
 
 - **方式一（推荐）**：下载 `KonosubaTRPG-CN-*-android.apk` 安装（需允许安装未知来源应用；当前为调试签名版）
 - **方式二（PWA，免安装）**：把 `dist/` 部署到任意静态服务器（或使用仓库已启用的 GitHub Pages 地址），手机 Chrome 打开后菜单中选择「添加到主屏幕」，即可以类 App 方式离线使用
@@ -67,7 +67,7 @@
 
 ### iPhone / iPad（iOS）
 
-➡️ **[v0.2.3 · iPhone/iPad 发行说明（PWA）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.3-ios)**
+➡️ **[v0.2.4 · iPhone/iPad 发行说明（PWA）](https://github.com/uttn666/konosuba-trpg-cn/releases/tag/v0.2.4-ios)**
 
 无需 App Store、无需 Mac，使用 Safari 的「添加到主屏幕」即可安装为 PWA：
 

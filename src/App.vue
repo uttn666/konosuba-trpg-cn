@@ -80,7 +80,8 @@ const KIND_LABEL = { racial: '种族', class: '职业', advanced: '上位职业'
 function kindLabel(s){ if (s.isSpell) return '法术'; if (s.isPassiveSpell) return '被动'; return KIND_LABEL[s.kind] }
 function aoeKind(s){
   const t = s.target || '', e = s.effect || ''
-  if (/场景|区域/.test(t)) return 'scene'
+  if (/场景/.test(t)) return 'scene'
+  if (/区域/.test(t)) return 'area'
   if (/变为范围|变为区域|对象变为区域|目标变区域/.test(e)) return 'convert'
   return ''
 }
@@ -272,31 +273,185 @@ function toggleEnc(k, b){
 const searchOpen = ref(false)
 const query = ref('')
 const searchInput = ref(null)
+const activeIdx = ref(0)
+const searchHistory = ref((() => { const v = jp(localStorage.getItem('kt-search-history'), []); return Array.isArray(v) ? v : [] })())
 const STATIC_RULES = [
   { g: '规则', t: '对抗判定：平局时反应方优先（反应方优先规则）', ref: 'p206', secId: 'rules-opposed' },
   { g: '规则', t: '全力移动 = 移动力 + 5 米', ref: 'p227', secId: 'combat-actions' },
   { g: '规则', t: '祝福：加骰 / 重掷判定（无「稳定伤势」用法）', ref: 'p235', secId: 'rules-blessings' },
   { g: '规则', t: '角色创建顺序：先技能 → 后属性值（上限 13）', ref: 'p121', secId: 'char-overview' },
 ]
+const SEARCH_W = { '技能': 30, '扩展技能': 24, '怪物': 28, '装备': 22, '陷阱': 20, '模组': 18, '规则书': 12, '规则': 10, '作弊能力': 8 }
+function plainHtml(h){
+  return String(h || '').replace(/<[^>]*>/g, ' ')
+    .replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/\s+/g, ' ').trim()
+}
 const searchIndex = computed(() => {
   const out = []
-  for (const s of skills) out.push({ g: '技能', t: `${s.name}${s.nameEn ? ' ' + s.nameEn : ''} — ${s.cls} ${s.cost || ''}${s.cost ? 'MP' : ''}`, ref: s.ref, v: 'skills', id: s })
-  for (const s of homebrew.slice(0, 200)) out.push({ g: '扩展技能', t: `${s.name} — ${s.cls}`, ref: s.ref, v: 'skills', id: s })
-  for (const e of enemies) out.push({ g: '怪物', t: `${e.name} ${e.nameEn} Lv${e.level} HP${e.hp}${e.mp != null ? ' MP' + e.mp : ''}`, ref: '', v: 'monsters', id: e })
-  for (const s of rulebook) out.push({ g: '规则书', t: `${s.ch}·${s.title}`, ref: '', v: 'reader', id: s })
-  out.push(...STATIC_RULES)
+  const push = (g, name, meta, body, ref, v, id, alias = '') => {
+    if (!name) return
+    out.push({
+      g, name, meta: meta || '', body: body || '', ref: ref || '', v, id, alias,
+      nameL: String(name).toLowerCase(), aliasL: String(alias || '').toLowerCase(),
+      metaL: String(meta || '').toLowerCase(), bodyL: String(body || '').toLowerCase(),
+      refL: String(ref || '').toLowerCase(),
+    })
+  }
+  for (const s of skills) {
+    push('技能', s.name, [s.nameEn, s.cls, kindLabel(s), (s.cost && s.cost !== '-' && s.cost !== '—') ? s.cost + ' MP' : '', s.usage && s.usage !== '-' ? s.usage : ''].filter(Boolean).join(' · '),
+      s.effect, s.ref, 'skills', s, [s.nameEn, s.alias].filter(Boolean).join(' '))
+  }
+  for (const s of homebrew) {
+    push('扩展技能', s.name, [s.nameEn, s.cls, s.ref ? 'p' + s.ref : ''].filter(Boolean).join(' · '),
+      s.effect, s.ref, 'skills', s, s.nameEn || '')
+  }
+  for (const e of enemies) {
+    push('怪物', e.name, [e.nameEn, `Lv${e.level}`, `HP ${e.hp}`, e.mp != null ? `MP ${e.mp}` : '', e.type || ''].filter(Boolean).join(' · '),
+      `${e.attack || ''} ${e.skills || ''}`, '', 'monsters', e, e.nameEn || '')
+  }
+  for (const [tab, label] of ITEM_TABS) {
+    for (const t of (items[tab] || [])) {
+      for (const r of (t.rows || [])) {
+        const name = r.name || (r.cells && r.cells[0])
+        if (!name) continue
+        push('装备', name, [r.nameEn, label, t.heading].filter(Boolean).join(' · '), [...(r.cells || []), r.note, r.fixNote].filter(Boolean).join(' '),
+          '', 'items', { tab, name }, r.nameEn || '')
+      }
+    }
+  }
+  for (const t of traps) {
+    push('陷阱', t.name, [t.cells && t.cells[1], t.cells && ('Lv' + t.cells[3])].filter(Boolean).join(' · '),
+      t.effect, '', 'traps', t)
+  }
+  for (const s of rulebook) {
+    push('规则书', s.title, [s.ch, s.chTitle].filter(Boolean).join(' · '), plainHtml(s.html), '', 'reader', s)
+  }
+  for (const m of modsList) {
+    for (let i = 0; i < m.stages.length; i++) {
+      const st = m.stages[i]
+      const body = st.blocks.map(b => b.text || b.title || (b.rows ? b.rows.flat().join(' ') : '')).filter(Boolean).join(' ')
+      push('模组', st.title, [m.title, st.tag].filter(Boolean).join(' · '), body, '', 'mods', { mid: m.id, stage: i }, m.meta.series || '')
+    }
+  }
+  push('作弊能力', '作弊能力一览', '全部作弊能力', plainHtml(cheats.html || ''), '', 'cheats', null)
+  for (const r of STATIC_RULES) {
+    const sec = rulebook.find(s => s.id === r.secId)
+    push(r.g, r.t, '', '', r.ref, 'reader', sec, '')
+  }
   return out
 })
+function scoreSearch(x, ql, qn){
+  const n = x.nameL, a = x.aliasL, m = x.metaL, b = x.bodyL, r = x.refL
+  let s = 0
+  if (n === ql || n === qn || a === ql || a === qn) s += 1000
+  else if (n.startsWith(ql) || n.startsWith(qn) || a.startsWith(ql) || a.startsWith(qn)) s += 650
+  else if (n.includes(ql) || n.includes(qn) || a.includes(ql) || a.includes(qn)) s += 420
+  if (m.includes(ql) || m.includes(qn)) s += 180
+  if (b.includes(ql) || b.includes(qn)) s += 80
+  const qr = qn.replace(/^p/, '')
+  if (qr && r.includes(qr)) s += 120
+  if (!s) return 0
+  const tokens = ql.split(/\s+/).filter(Boolean)
+  if (tokens.length > 1) {
+    const hay = n + ' ' + a + ' ' + m + ' ' + b
+    if (!tokens.every(t => hay.includes(t))) return 0
+    s += tokens.reduce((sum, t) => sum + (n.includes(t) ? 100 : 0) + (m.includes(t) ? 30 : 0), 0)
+  }
+  return s + (SEARCH_W[x.g] || 0) + Math.max(0, 30 - n.length)
+}
 const searchResults = computed(() => {
-  const q = query.value.trim().toLowerCase()
-  if (!q) return searchIndex.value.slice(0, 40)
-  return searchIndex.value.filter(x => x.t.toLowerCase().includes(q)).slice(0, 40)
+  const q = query.value.trim()
+  if (!q) return []
+  const ql = q.toLowerCase(), qn = ql.replace(/\s+/g, '')
+  const scored = []
+  for (const x of searchIndex.value) {
+    const sc = scoreSearch(x, ql, qn)
+    if (sc > 0) scored.push({ x, sc })
+  }
+  scored.sort((a, b) => b.sc - a.sc || a.x.nameL.length - b.x.nameL.length)
+  return scored.slice(0, 50).map(v => v.x)
 })
-function openSearch(){ searchOpen.value = true; query.value = ''; setTimeout(() => searchInput.value && searchInput.value.focus(), 50) }
+function escRe(s){ return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+function hl(text, q){
+  const raw = String(text || '')
+  const esc = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const terms = [...new Set([q.trim(), q.trim().replace(/\s+/g, '')])].filter(Boolean).sort((a, b) => b.length - a.length)
+  if (!terms.length) return esc
+  return esc.replace(new RegExp('(' + terms.map(escRe).join('|') + ')', 'ig'), '<mark>$1</mark>')
+}
+function openSearch(){
+  searchOpen.value = true
+  query.value = ''
+  activeIdx.value = 0
+  setTimeout(() => searchInput.value && searchInput.value.focus(), 50)
+}
+function rememberSearch(q){
+  if (!q) return
+  searchHistory.value = [q, ...searchHistory.value.filter(x => x !== q)].slice(0, 6)
+  try { localStorage.setItem('kt-search-history', JSON.stringify(searchHistory.value)) } catch (e) {}
+}
+function moveActive(d){
+  const n = searchResults.value.length
+  if (!n) return
+  activeIdx.value = (activeIdx.value + d + n) % n
+  nextTick(() => {
+    const el = document.querySelector('.kt-palette-results .kt-sr-item.is-active')
+    if (el) el.scrollIntoView({ block: 'nearest' })
+  })
+}
+function onSearchKey(e){
+  if (e.key === 'ArrowDown') { e.preventDefault(); moveActive(1) }
+  else if (e.key === 'ArrowUp') { e.preventDefault(); moveActive(-1) }
+  else if (e.key === 'Enter') {
+    e.preventDefault()
+    if (searchResults.value[activeIdx.value]) onSearchHit(searchResults.value[activeIdx.value])
+  }
+}
+watch(query, () => { activeIdx.value = 0 })
+watch(searchResults, () => { if (activeIdx.value >= searchResults.value.length) activeIdx.value = 0 })
+function flashData(attr, val){
+  nextTick(() => {
+    const el = [...document.querySelectorAll(`[data-${attr}]`)].find(x => x.dataset[attr] === val)
+    if (!el) return
+    el.scrollIntoView({ block: 'center' })
+    el.classList.add('kt-search-hit')
+    setTimeout(() => el.classList.remove('kt-search-hit'), 1800)
+  })
+}
+function openSearchStage(mid, i){
+  const a = stageOpenMap[mid] || (stageOpenMap[mid] = [])
+  a[i] = true
+  try { localStorage.setItem('kt-stage-open', JSON.stringify(stageOpenMap)) } catch (e) {}
+}
 function onSearchHit(item){
-  if (item.v === 'skills') { view.value = 'skills'; activeNav.value = '技能库'; drawer.value = item.id }
-  else if (item.v === 'monsters') { view.value = 'monsters'; activeNav.value = '怪物卡' }
-  else if (item.v === 'reader') { view.value = 'reader'; activeNav.value = '规则书阅读'; jumpSection(chapterOf(item.id), item.id) }
+  if (!item) return
+  rememberSearch(query.value.trim())
+  if (item.v === 'skills') { go('skills', null, '技能库'); drawer.value = item.id }
+  else if (item.v === 'monsters') {
+    mType.value = 'all'
+    expanded[item.id.name] = true
+    go('monsters', null, '怪物卡')
+    flashData('enemy', item.id.name)
+  }
+  else if (item.v === 'items') {
+    itemTab.value = item.id.tab
+    go('items', null, '装备库')
+    flashData('item', item.id.tab + '::' + item.id.name)
+  }
+  else if (item.v === 'traps') { go('traps', null, '陷阱'); flashData('trap', item.id.name) }
+  else if (item.v === 'mods') {
+    modSeries.value = 'all'
+    curModId.value = item.id.mid
+    go('mods', null, '全部模组')
+    openSearchStage(item.id.mid, item.id.stage)
+    flashData('stage', item.id.mid + '-' + item.id.stage)
+  }
+  else if (item.v === 'cheats') { go('cheats', null, '作弊能力') }
+  else if (item.v === 'reader') {
+    go('reader', null, '规则书阅读')
+    if (item.id) jumpSection(chapterOf(item.id), item.id)
+  }
   searchOpen.value = false
 }
 function onKey(e){
@@ -428,6 +583,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                       <span class="kt-badge" :class="srcBadge(s)[1]">{{ srcBadge(s)[0] }}</span>
                       <span v-if="s.kind === 'spell' || s.isSpell" class="kt-badge kt-badge-purple">法术</span>
                       <span v-if="aoeKind(s) === 'scene'" class="kt-badge kt-badge-gold">场景范围</span>
+                      <span v-else-if="aoeKind(s) === 'area'" class="kt-badge kt-badge-gold">区域目标</span>
                       <span v-else-if="aoeKind(s) === 'convert'" class="kt-badge kt-badge-gold">单体→范围</span>
                       <span v-if="s.fixNote" class="kt-badge kt-badge-red">已修正</span>
                     </span>
@@ -464,7 +620,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
               </div>
             </div>
             <div class="kt-grid kt-grid-mob">
-              <div v-for="e in filteredMobs" :key="e.name + e.nameEn" class="kt-mobcard">
+              <div v-for="e in filteredMobs" :key="e.name + e.nameEn" class="kt-mobcard" :data-enemy="e.name">
                 <div class="kt-mob-top">
                   <strong>{{ e.name }} <span style="opacity:.55;font-size:12px">{{ e.nameEn }}</span></strong>
                   <span class="kt-badge" :class="e.mob ? 'kt-badge-cyan' : 'kt-badge-gold'">{{ e.mob ? '杂兵' : '单体 Lv' + e.level }}</span>
@@ -501,7 +657,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                 <table class="kt-table">
                   <thead><tr><th v-for="h in t.headers" :key="h">{{ h }}</th><th v-if="t.rows.some(r => r.note)">备注</th></tr></thead>
                   <tbody>
-                    <tr v-for="r in t.rows" :key="r.name + r.cells[1]">
+                    <tr v-for="r in t.rows" :key="r.name + r.cells[1]" :data-item="itemTab + '::' + r.name">
                       <td v-for="(c, ci) in r.cells" :key="ci">{{ c }}</td>
                       <td v-if="t.rows.some(r2 => r2.note)">{{ r.note }}<div v-if="r.fixNote" class="kt-fixnote">⚠ {{ r.fixNote }}</div></td>
                     </tr>
@@ -520,7 +676,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
               <table class="kt-table">
                 <thead><tr><th>名称</th><th>类型</th><th>等级</th><th>探测</th><th>拆除</th><th>对象/射程</th><th>效果（已回填）</th></tr></thead>
                 <tbody>
-                  <tr v-for="t in traps" :key="t.name">
+                  <tr v-for="t in traps" :key="t.name" :data-trap="t.name">
                     <td><strong>{{ t.cells[0] }}</strong></td><td>{{ t.cells[1] }}</td><td class="kt-num">{{ t.cells[3] }}</td>
                     <td class="kt-num">{{ t.cells[6] }}</td><td class="kt-num">{{ t.cells[7] }}</td><td>{{ t.cells[8] }}</td>
                     <td>{{ t.effect }}<div v-if="t.fixNote" class="kt-fixnote">⚠ {{ t.fixNote }}</div></td>
@@ -614,7 +770,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
               </div>
               <div v-if="curMod.pregen" class="kt-note kt-note-info kt-pregen"><strong>预读</strong><ModText :text="curMod.pregen" /></div>
 
-              <div v-for="(st, i) in curMod.stages" :key="curMod.id + '-' + i" class="kt-stage">
+              <div v-for="(st, i) in curMod.stages" :key="curMod.id + '-' + i" class="kt-stage" :data-stage="curMod.id + '-' + i">
                 <button class="kt-stage-head" @click="toggleStageOpen(curMod.id, i)">
                   <span>{{ stageIsOpen(curMod.id, i) ? '▾' : '▸' }}</span>
                   <label class="kt-check kt-check-sm" @click.stop><input type="checkbox" :checked="stageDone(curMod.id, i)" @change="toggleStageDone(curMod.id, i)">{{ st.title }}</label>
@@ -739,15 +895,41 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
       <!-- 全局搜索 -->
       <div v-if="searchOpen" class="kt-overlay kt-overlay-top" @click.self="searchOpen = false">
         <div class="kt-palette" role="dialog" aria-label="全局搜索">
-          <div class="kt-palette-input"><span>🔍</span><input ref="searchInput" v-model="query" placeholder="驱散 / 圣盾 / 狮鹫 / 全力移动…" aria-label="搜索"><kbd>Esc</kbd></div>
+          <div class="kt-palette-input"><span>🔍</span><input ref="searchInput" v-model="query" @keydown="onSearchKey" placeholder="技能 / 装备 / 怪物 / 陷阱 / 规则 / 模组…" aria-label="搜索"><kbd>Esc</kbd></div>
           <div class="kt-palette-results" aria-live="polite">
-            <template v-if="searchResults.length">
-              <template v-for="(it, i) in searchResults" :key="i">
-                <div v-if="i === 0 || searchResults[i - 1].g !== it.g" class="kt-sr-group">{{ it.g }}</div>
-                <button class="kt-sr-item" @click="onSearchHit(it)">{{ it.t }}<span v-if="it.ref" class="kt-sr-meta">{{ it.ref }}</span></button>
+            <div v-if="!query.trim()" class="kt-sr-start">
+              <div class="kt-sr-group">快捷入口</div>
+              <div class="kt-sr-quick">
+                <button @click="go('skills', null, '技能库')">📚 技能库</button>
+                <button @click="go('monsters', null, '怪物卡')">👹 怪物卡</button>
+                <button @click="go('items', null, '装备库')">⚔️ 装备库</button>
+                <button @click="go('traps', null, '陷阱')">⚠️ 陷阱</button>
+                <button @click="go('reader', null, '规则书阅读')">📖 规则书</button>
+                <button @click="go('mods', null, '全部模组')">📜 模组</button>
+              </div>
+              <template v-if="searchHistory.length">
+                <div class="kt-sr-group">最近搜索</div>
+                <div class="kt-sr-quick">
+                  <button v-for="h in searchHistory" :key="h" @click="query = h">🕘 {{ h }}</button>
+                </div>
               </template>
+              <div class="kt-sr-tip">支持中文名、英文名、页码（如 p148）与正文关键词；↑↓ 选择，Enter 打开，Esc 关闭。</div>
+            </div>
+            <template v-else-if="searchResults.length">
+              <button v-for="(it, i) in searchResults" :key="it.g + i" class="kt-sr-item" :class="{ 'is-active': activeIdx === i }" @mouseenter="activeIdx = i" @click="onSearchHit(it)">
+                <span class="kt-sr-badge">{{ it.g }}</span>
+                <span class="kt-sr-main">
+                  <span class="kt-sr-name" v-html="hl(it.name, query)"></span>
+                  <span v-if="it.meta" class="kt-sr-sub" v-html="hl(it.meta, query)"></span>
+                </span>
+                <span v-if="it.ref" class="kt-sr-meta">{{ it.ref }}</span>
+              </button>
             </template>
-            <div v-else class="kt-sr-empty">没有匹配结果</div>
+            <div v-else class="kt-sr-empty">没有匹配结果<br><span>试试技能中文名 / 英文名、页码，或更短的关键词</span></div>
+          </div>
+          <div class="kt-sr-foot">
+            <span>↑↓ 选择</span><span>Enter 打开</span><span>Esc 关闭</span>
+            <span v-if="searchResults.length" class="kt-sr-count">显示 {{ searchResults.length }} 条</span>
           </div>
         </div>
       </div>
