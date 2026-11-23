@@ -563,3 +563,10 @@ button#kt-app .kt-chip{cursor:pointer;}
 #kt-app .kt-dc{display:inline-block; padding:0 5px; border-radius:5px; background:rgba(38,139,210,.14); color:var(--kt-accent); font-weight:600; font-size:.94em; line-height:1.55;}
 #kt-app .kt-dice{display:inline-block; padding:0 5px; border-radius:5px; border:1px solid var(--kt-border); background:var(--kt-card2); color:var(--kt-heading); font-family:ui-monospace,SFMono-Regular,Consolas,monospace; font-size:.9em; line-height:1.55;}
 #kt-app.dark .kt-dc{background:rgba(38,139,210,.25);}
+
+/* 技能库：对象/射程与范围提示 */
+#kt-app .kt-skillcard .kt-statline{flex-wrap:wrap; row-gap:3px;}
+#kt-app .kt-spellnote{display:flex; gap:10px; align-items:flex-start; margin:0 0 12px; padding:10px 13px; font-size:12.5px; line-height:1.75;}
+#kt-app .kt-spellnote strong{flex:none; color:var(--kt-accent);}
+#kt-app .kt-spellnote span{color:var(--kt-heading);}
+@media (max-width:600px){ #kt-app .kt-spellnote{flex-direction:column; gap:3px;} }

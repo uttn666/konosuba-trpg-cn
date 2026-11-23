@@ -77,6 +77,13 @@ function go(v, preset, label){
 /* ---------- 技能库 ---------- */
 const SRC_LABEL = { official: ['官方', 'kt-badge-green'], ar2e: ['AR2E 扩展', 'kt-badge-gold'], legacy: ['遗产职业', 'kt-badge-purple'], home: ['社区自制', 'kt-badge-cyan'] }
 const KIND_LABEL = { racial: '种族', class: '职业', advanced: '上位职业', general: '通用', spell: '法术', passive: '被动', homebrew: 'AR2E 扩展' }
+function kindLabel(s){ if (s.isSpell) return '法术'; if (s.isPassiveSpell) return '被动'; return KIND_LABEL[s.kind] }
+function aoeKind(s){
+  const t = s.target || '', e = s.effect || ''
+  if (/场景|区域/.test(t)) return 'scene'
+  if (/变为范围|变为区域|对象变为区域|目标变区域/.test(e)) return 'convert'
+  return ''
+}
 const SKILL_CATS = [
   { k: 'all', label: '全部' },
   { k: 'racial', label: '种族技能' },
@@ -113,8 +120,8 @@ function poolFor(cat){
   if (cat === 'class') return [...o.filter(s => s.kind === 'class' || s.kind === 'advanced'), ...h.filter(s => hbCat(s) === 'class')]
   if (cat === 'advanced') return o.filter(s => s.kind === 'advanced')
   if (cat === 'general') return [...o.filter(s => s.kind === 'general'), ...h.filter(s => hbCat(s) === 'general')]
-  if (cat === 'spell') return [...o.filter(s => s.kind === 'spell'), ...h.filter(s => hbCat(s) === 'spell')]
-  if (cat === 'passive') return o.filter(s => s.kind === 'passive')
+  if (cat === 'spell') return [...o.filter(s => s.kind === 'spell' || s.isSpell), ...h.filter(s => hbCat(s) === 'spell')]
+  if (cat === 'passive') return o.filter(s => s.kind === 'passive' || s.isPassiveSpell)
   return [...o, ...h]
 }
 const classChips = computed(() => [...new Set(poolFor(skCat.value).map(s => s.cls).filter(Boolean))])
@@ -406,19 +413,25 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                 </div>
               </aside>
               <div class="kt-results">
+                <div v-if="skCat === 'spell'" class="kt-note kt-note-info kt-spellnote">
+                  <strong>范围规则</strong>
+                  <span>本系统法术默认「单体」。法师技能「魔力爆发（Magic Blast，p150）」可把主要动作的单体法术变为范围（SL×2 个目标）；「爆裂魔法（Explosion，p176）」本身是「场景（选择）」范围。其他法术要群体化，需要这类技能支持。</span>
+                </div>
                 <div v-if="skillView === 'cards'" class="kt-grid">
                   <button v-for="(s, i) in filteredSkills" :key="i" class="kt-skillcard" :class="kindClass(s)" @click="openDrawer(s)">
-                    <span class="kt-ref">{{ s.ref || KIND_LABEL[s.kind] }}</span>
+                    <span class="kt-ref">{{ s.ref || kindLabel(s) }}</span>
                     <span class="kt-name">{{ s.name }}</span>
                     <span v-if="s.nameEn" class="kt-en">{{ s.nameEn }}</span>
                     <span class="kt-badges">
                       <span class="kt-badge kt-badge-blue">{{ s.cls }}</span>
                       <span v-if="s.kind === 'advanced'" class="kt-badge kt-badge-red">上位职业</span>
                       <span class="kt-badge" :class="srcBadge(s)[1]">{{ srcBadge(s)[0] }}</span>
-                      <span v-if="s.kind === 'spell'" class="kt-badge kt-badge-purple">法术</span>
+                      <span v-if="s.kind === 'spell' || s.isSpell" class="kt-badge kt-badge-purple">法术</span>
+                      <span v-if="aoeKind(s) === 'scene'" class="kt-badge kt-badge-gold">场景范围</span>
+                      <span v-else-if="aoeKind(s) === 'convert'" class="kt-badge kt-badge-gold">单体→范围</span>
                       <span v-if="s.fixNote" class="kt-badge kt-badge-red">已修正</span>
                     </span>
-                    <span class="kt-statline"><span>时机 <b>{{ s.timing || '—' }}</b></span><span>消耗 <b>{{ fmtCost(s.cost) }}</b></span><span>SL <b>{{ s.maxSL || '—' }}</b></span></span>
+                    <span class="kt-statline"><span>时机 <b>{{ s.timing || '—' }}</b></span><span>对象 <b>{{ s.target || '—' }}</b></span><span v-if="s.range && s.range !== '-'">射程 <b>{{ s.range }}</b></span><span>消耗 <b>{{ fmtCost(s.cost) }}</b></span><span>SL <b>{{ s.maxSL || '—' }}</b></span></span>
                     <span class="kt-eff">{{ s.effect }}</span>
                   </button>
                 </div>
@@ -427,7 +440,7 @@ const fmtCost = c => (!c || c === '-' || c === '—') ? '—' : (/^\d+$/.test(c)
                     <thead><tr><th>名称</th><th>分类</th><th>类别</th><th>时机</th><th>判定</th><th>对象</th><th>射程</th><th>消耗</th><th>MaxSL</th><th>来源</th><th>页码</th></tr></thead>
                     <tbody>
                       <tr v-for="(s, i) in filteredSkills" :key="i" @click="openDrawer(s)" style="cursor:pointer">
-                        <td>{{ s.name }}{{ s.fixNote ? ' ⚠' : '' }}</td><td>{{ s.cls }}</td><td><span class="kt-badge" :class="s.kind === 'advanced' ? 'kt-badge-red' : 'kt-badge-blue'">{{ KIND_LABEL[s.kind] }}</span></td><td>{{ s.timing || '—' }}</td><td>{{ s.check || '—' }}</td>
+                        <td>{{ s.name }}{{ s.fixNote ? ' ⚠' : '' }}</td><td>{{ s.cls }}</td><td><span class="kt-badge" :class="s.kind === 'advanced' ? 'kt-badge-red' : 'kt-badge-blue'">{{ kindLabel(s) }}</span></td><td>{{ s.timing || '—' }}</td><td>{{ s.check || '—' }}</td>
                         <td>{{ s.target || '—' }}</td><td>{{ s.range || '—' }}</td><td class="kt-num">{{ fmtCost(s.cost) }}</td><td class="kt-num">{{ s.maxSL || '—' }}</td>
                         <td><span class="kt-badge" :class="srcBadge(s)[1]">{{ srcBadge(s)[0] }}</span></td><td>{{ s.ref || '—' }}</td>
                       </tr>

@@ -1,5 +1,5 @@
 /* 素晴TRPG 中文规则书 · 离线缓存（学习交流用，非营利） */
-const CACHE = 'konosuba-trpg-cn-v3';
+const CACHE = 'konosuba-trpg-cn-v4';
 const CORE = ['./', './index.html', './manifest.webmanifest', './icon.svg',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png'];
 

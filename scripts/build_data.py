@@ -92,6 +92,23 @@ SPELL_FIXES = {
     '祈祷技能':   {'effect': '祭司/大祭司技能的所有判定+1d6。', 'fix': '旧版误作「法术的判定」，官方为 skills (p180)'},
     '圣典术':     {'effect': '仅影响祭司/大祭司技能。主要动作造成的HP恢复或攻击伤害+精神值，持续到主流程结束。', 'fix': '旧版范围收窄为「法术」(p180)'},
 }
+
+# 职业技能表与「主要法术一览」对同一法术用了不同译名；统一为法术一览的官方英文对应译名。
+# 仅改 class/advanced 条目，法术一览条目作为合并来源。
+SKILL_CANON = {
+    '法师': {
+        '习得基础魔法': '获得基础魔法', '足缚术': '脚踝陷阱', '风刃': '风刃术',
+        '元素强化': '元素强化技能', '强化咏唱': '增强咏唱', '闪光': '闪光术',
+        '冰冻强风': '冰霜风', '闪电': '雷击术', '锁定': '锁术',
+        '魔法强化': '魔法强化技能', '魔法飞弹': '魔力爆发', '魔力攀升': '魔力升华',
+        '催眠术': '睡眠术', '石缚术': '石化束缚', '水盾术': '水之盾',
+        '风幕术': '风之帘',
+    },
+    '大法师': {
+        '地震术': '地动术', '爆裂术': '爆裂魔法', '炼狱术': '炼狱火',
+        '光刃术': '光之军刀', '雷击术': '雷神击', '龙卷术': '龙卷风',
+    },
+}
 ITEM_FIXES = {
     '巴斯莱剑':   {'note': '可投掷', 'fix': '备注漏「可投掷」(p190)'},
     '圆盾':       {'note': '职业限制含盗贼', 'fix': '旧版漏盗贼职业限制 (p194)'},
@@ -286,6 +303,43 @@ for s in skills:
     if not s['ref'] and s.get('nameEn'):
         ref = ref_fuzzy(s['nameEn'])
         if ref: s['ref'] = ref
+
+# 3g. 统一法术译名，并合并「职业技能表」与「主要法术一览」的重复条目
+#     class/advanced 条目保留职业归属；法术一览的英文名/页码/对象补入该条目。
+CANON_ALIASES = 0
+for s in skills:
+    if s['kind'] in ('class', 'advanced') and s['cls'] in SKILL_CANON:
+        new = SKILL_CANON[s['cls']].get(s['name'])
+        if new and new != s['name']:
+            s['alias'] = s['name']
+            s['name'] = new
+            CANON_ALIASES += 1
+
+summary_by = {}
+for s in skills:
+    if s['kind'] in ('spell', 'passive'):
+        summary_by[(s['cls'], s['name'])] = s
+
+DROP = set()
+MERGED = 0
+for s in skills:
+    if s['kind'] not in ('class', 'advanced'):
+        continue
+    t = summary_by.get((s['cls'], s['name']))
+    if not t:
+        continue
+    for k in ('nameEn', 'ref', 'target', 'range', 'timing', 'cost', 'maxSL', 'usage'):
+        if not s.get(k) and t.get(k):
+            s[k] = t[k]
+    if not s.get('effect'):
+        s['effect'] = t.get('effect', '')
+    s['isSpell'] = (t['kind'] == 'spell')
+    s['isPassiveSpell'] = (t['kind'] == 'passive')
+    DROP.add(id(t))
+    MERGED += 1
+if DROP:
+    skills = [s for s in skills if id(s) not in DROP]
+print(f'skill canon aliases: {CANON_ALIASES}, merged duplicates: {MERGED}')
 
 # ---------- 3.5 职业修正表 [44]（起始HP/MP/成长/属性修正/装备限制） ----------
 ABILS = ['STR', 'DEX', 'AGI', 'INT', 'PER', 'MND', 'LUK']
